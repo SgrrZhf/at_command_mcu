@@ -1,0 +1,8 @@
+si 1
+speed 4000
+r
+h
+loadfile build/at_command_template.hex
+r
+exit
+
