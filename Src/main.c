@@ -53,9 +53,11 @@
 #include "logging.h"
 #include "serial_bsp.h"
 #include "cmsis_os.h"
+#include <string.h>
+
 
 /* USER CODE BEGIN Includes */
-
+//#define SERIAL_TEST
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -80,6 +82,10 @@ static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 void StartDefaultTask(void const * argument);
+
+#ifdef SERIAL_TEST
+void serial_test(void *arg);
+#endif
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -141,9 +147,12 @@ int main(void)
 
     /* Create the thread(s) */
     /* definition and creation of defaultTask */
-    osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128*4);
+#ifdef SERIAL_TEST
+    xTaskCreate(serial_test, "serial test", 128 * 3, NULL, 7, NULL);
+#else
+    osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128 * 4);
     defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
+#endif
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     /* USER CODE END RTOS_THREADS */
@@ -328,6 +337,27 @@ void StartDefaultTask(void const * argument)
     }
     /* USER CODE END 5 */
 }
+
+#ifdef SERIAL_TEST
+const char TransmitData[][12] = {"at+csq", "at+cgmi"};
+uint8_t TestBuff[512];
+void serial_test(void *arg)
+{
+    UNUSED(arg);
+    uint8_t i = 0;
+    uint16_t len;
+
+    while(1)
+    {
+        serial_write((uint8_t *)TransmitData[i % 2], strlen(TransmitData[i % 2]));
+        len = serial_read(TestBuff, 256, 5000);
+        TestBuff[len] = '\0';
+        printf("%s\n", TestBuff);
+        vTaskDelay(MS2TICK(1000));
+        i++;
+    }
+}
+#endif
 
 /**
   * @brief  Period elapsed callback in non blocking mode

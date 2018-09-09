@@ -81,7 +81,7 @@ void serial_rxidle_handler(UART_HandleTypeDef *huart)
     }
     else
     {
-        if(SerialDevice.PutIndex > endIndex)
+        if(SerialDevice.PutIndex > endIndex && SerialDevice.Cycles == 1)
         {
             /* 首尾有交接，无溢出 */
             SerialDevice.InWaitings =
